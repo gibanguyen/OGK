@@ -42,6 +42,7 @@ class TrayUI:
         self.message_var: tk.StringVar | None = None
         self.pair_message_var: tk.StringVar | None = None
         self.icon: pystray.Icon | None = None
+        self.canvas: tk.Canvas | None = None
         self.blocked_list: tk.Listbox | None = None
         self.policy_list: tk.Listbox | None = None
         self.policy_status_var: tk.StringVar | None = None
@@ -74,16 +75,28 @@ class TrayUI:
         root = tk.Tk()
         self.root = root
         root.title("OGK · Trợ lý trên máy của trẻ")
-        root.geometry("500x900")
-        root.minsize(460, 760)
+        root.geometry("520x760")
+        root.minsize(440, 520)
         root.protocol("WM_DELETE_WINDOW", root.withdraw)
         root.configure(background="#f5f8f4")
         style = ttk.Style(root)
         style.configure("Title.TLabel", font=("Segoe UI", 17, "bold"), foreground="#173b3a")
         style.configure("Hint.TLabel", foreground="#526c69", wraplength=340)
         style.configure("Clock.TLabel", font=("Segoe UI", 40, "bold"), foreground="#087f74")
-        frame = ttk.Frame(root, padding=22)
-        frame.pack(fill="both", expand=True)
+        viewport = ttk.Frame(root)
+        viewport.pack(fill="both", expand=True)
+        self.canvas = tk.Canvas(viewport, highlightthickness=0, background="#f5f8f4")
+        scrollbar = ttk.Scrollbar(viewport, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        frame = ttk.Frame(self.canvas, padding=22)
+        canvas_window = self.canvas.create_window((0, 0), window=frame, anchor="nw")
+        frame.bind("<Configure>", lambda _event: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind("<Configure>", lambda event: self.canvas.itemconfigure(canvas_window, width=event.width))
+        root.bind_all("<MouseWheel>", self._on_mousewheel)
+        root.bind_all("<Button-4>", self._on_mousewheel_up)
+        root.bind_all("<Button-5>", self._on_mousewheel_down)
         ttk.Label(frame, text="OGK · Máy của trẻ", style="Title.TLabel").pack(anchor="w")
         ttk.Label(frame, text="Ứng dụng hiển thị rõ khi đang chạy và chỉ ghi nhận metadata theo cấu hình gia đình.",
                   style="Hint.TLabel").pack(anchor="w", pady=(6, 14))
@@ -187,6 +200,34 @@ class TrayUI:
         except Empty:
             pass
         self.root.after(50, self._drain_ui_updates)
+
+    def _scroll_pointer_is_over_window(self) -> bool:
+        if not self.root:
+            return False
+        x, y = self.root.winfo_pointerxy()
+        left, top = self.root.winfo_rootx(), self.root.winfo_rooty()
+        return left <= x < left + self.root.winfo_width() and top <= y < top + self.root.winfo_height()
+
+    def _on_mousewheel(self, event: tk.Event) -> str | None:
+        if not self.canvas or not self._scroll_pointer_is_over_window():
+            return None
+        steps = int(-event.delta / 120)
+        if steps == 0 and event.delta:
+            steps = -1 if event.delta > 0 else 1
+        self.canvas.yview_scroll(steps, "units")
+        return "break"
+
+    def _on_mousewheel_up(self, _event: tk.Event) -> str | None:
+        if self.canvas and self._scroll_pointer_is_over_window():
+            self.canvas.yview_scroll(-1, "units")
+            return "break"
+        return None
+
+    def _on_mousewheel_down(self, _event: tk.Event) -> str | None:
+        if self.canvas and self._scroll_pointer_is_over_window():
+            self.canvas.yview_scroll(1, "units")
+            return "break"
+        return None
 
     def _refresh_visibility(self) -> None:
         if not self.root:

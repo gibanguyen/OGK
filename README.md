@@ -8,7 +8,7 @@ OGK hiển thị rõ khi chạy. Agent chỉ gửi tên ứng dụng/domain, th�
 
 - **Đăng nhập phụ huynh:** tài khoản đầu tiên đăng ký một lần; mật khẩu được băm PBKDF2. Phiên dùng cookie `HttpOnly`, hết hạn sau 7 ngày.
 - **Ghép đôi:** phụ huynh tạo mã 8 ký tự cho hồ sơ trẻ. Mã chỉ dùng một lần, hết hạn sau 10 phút. Agent nhận token riêng của thiết bị và lưu tại `%LOCALAPPDATA%\OGK\agent.json`.
-- **Tray UI phía trẻ:** mở OGK từ notification area để xem trạng thái, gửi yêu cầu thêm 15 phút/báo chặn nhầm hoặc mở báo cáo minh bạch. Đóng cửa sổ sẽ thu nhỏ về tray; chọn “Thoát OGK” để dừng.
+- **Tray UI phía trẻ:** mở OGK từ notification area để xem đồng hồ, danh sách domain/ứng dụng theo policy, sự kiện gần đây, gửi yêu cầu thêm 15 phút/báo chặn nhầm hoặc mở báo cáo minh bạch. Cửa sổ hỗ trợ thanh cuộn dọc và lăn chuột; đóng cửa sổ sẽ thu nhỏ về tray, chọn “Thoát OGK” để dừng.
 - **Giới hạn và lọc:** policy có quota, lịch tuần, nhóm/domain/app; agent nhận policy qua heartbeat và xác minh HMAC-SHA256. DNS proxy là tùy chọn, chỉ nghe loopback và không tự đổi DNS của Windows.
 - **Báo cáo:** dashboard phụ huynh hiển thị thời lượng, top app/domain và sự kiện bị chặn. Trẻ mở báo cáo bằng tray; token thiết bị nằm trong URL fragment và không được gửi trong HTTP request.
 - **Xin thêm thời gian:** phụ huynh duyệt yêu cầu trên dashboard; heartbeat tiếp theo chuyển lệnh tới agent và cộng số phút đã duyệt vào quota của ngày đó.
